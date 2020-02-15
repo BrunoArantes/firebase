@@ -1,3 +1,5 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 
 void main() => runApp(MyApp());
@@ -43,6 +45,12 @@ class MyHomePage extends StatefulWidget {
   _MyHomePageState createState() => _MyHomePageState();
 }
 
+List novapg = [];
+List fotos = [
+  "https://scontent-gru2-1.xx.fbcdn.net/v/t31.0-8/s960x960/14711654_1142378712505024_7101187375260432527_o.jpg?_nc_cat=107&_nc_ohc=n3aQTaxeV5UAX-9dtwF&_nc_ht=scontent-gru2-1.xx&_nc_tp=7&oh=24bc5e632b96c8fc0e945a0cfaeb26e5&oe=5EBDE08D",
+  "https://scontent-gru2-2.xx.fbcdn.net/v/t1.0-9/s960x960/70464075_3026778337349433_317051298924986368_o.jpg?_nc_cat=102&_nc_ohc=VT_AQ-HSJLAAX_jHt5R&_nc_ht=scontent-gru2-2.xx&_nc_tp=7&oh=a794d34ca803eb92f689146aa5993978&oe=5ED33580"
+];
+
 class _MyHomePageState extends State<MyHomePage> {
   int _counter = 0;
 
@@ -71,41 +79,65 @@ class _MyHomePageState extends State<MyHomePage> {
         // the App.build method, and use it to set our appbar title.
         title: Text(widget.title),
       ),
-      body: Center(
-        // Center is a layout widget. It takes a single child and positions it
-        // in the middle of the parent.
-        child: Column(
-          // Column is also a layout widget. It takes a list of children and
-          // arranges them vertically. By default, it sizes itself to fit its
-          // children horizontally, and tries to be as tall as its parent.
-          //
-          // Invoke "debug painting" (press "p" in the console, choose the
-          // "Toggle Debug Paint" action from the Flutter Inspector in Android
-          // Studio, or the "Toggle Debug Paint" command in Visual Studio Code)
-          // to see the wireframe for each widget.
-          //
-          // Column has various properties to control how it sizes itself and
-          // how it positions its children. Here we use mainAxisAlignment to
-          // center the children vertically; the main axis here is the vertical
-          // axis because Columns are vertical (the cross axis would be
-          // horizontal).
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: <Widget>[
-            Text(
-              'You have pushed the button this many times:',
-            ),
-            Text(
-              '$_counter',
-              style: Theme.of(context).textTheme.display1,
-            ),
-          ],
-        ),
+      body: ListView.builder(
+        itemCount: novapg.length,
+        itemBuilder: (context, index) {
+          return ListTile(
+            title: Text(novapg[index].data['nome']),
+            subtitle: Text(novapg[index].data['contato'].toString()),
+            leading: Image.network(fotos[index]),
+            onTap: () {
+              Navigator.of(context).push(MaterialPageRoute(
+                  builder: (context) => Newpage(receba: novapg[index])));
+            },
+          );
+        },
       ),
       floatingActionButton: FloatingActionButton(
-        onPressed: _incrementCounter,
+        onPressed: () async {
+          var data = await FirebaseAuth.instance.signInWithEmailAndPassword(
+              email: "mathcal@hotmail.com", password: "lopinho123");
+
+          DocumentSnapshot lopes = await Firestore.instance
+              .collection('usuarios')
+              .document(data.uid)
+              .get();
+
+          QuerySnapshot novepg =
+              await Firestore.instance.collection('clientes').getDocuments();
+
+          novapg = novepg.documents;
+          print(novapg[0].data["nome"]);
+          setState(() {});
+
+          // FirebaseAuth.instance
+          //     .signInWithEmailAndPassword(email: null, password: null);
+        },
         tooltip: 'Increment',
         child: Icon(Icons.add),
       ), // This trailing comma makes auto-formatting nicer for build methods.
     );
+  }
+}
+
+class Newpage extends StatelessWidget {
+  DocumentSnapshot receba;
+  Newpage({this.receba});
+
+  @override
+  Widget build(BuildContext context) {
+    print(receba.data['nome']);
+
+    return Scaffold(
+        appBar: AppBar(),
+        body: Column(
+          children: <Widget>[
+            Container(
+              child: Image.network(
+                  "https://scontent-gru1-1.xx.fbcdn.net/v/t1.0-9/p960x960/84415717_2494324897357361_5718616051155992576_o.jpg?_nc_cat=103&_nc_ohc=QBMYj6p1-bQAX_m-nJG&_nc_ht=scontent-gru1-1.xx&_nc_tp=6&oh=ff3421fc11839a26ed70a6d0f0309aa5&oe=5EC8C6EC"),
+            ),
+            Text("O ${receba.data["nome"]} é namorado do Bruno")
+          ],
+        ));
   }
 }
